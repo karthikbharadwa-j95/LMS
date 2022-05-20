@@ -6,7 +6,7 @@ public class LmsException extends RuntimeException {
 
 	@Override
 	public String getMessage() {
-		return this.message = message;
+		return this.message;
 	}
 
 	public LmsException(String message) {
