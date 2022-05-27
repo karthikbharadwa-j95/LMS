@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.te.lms.dto.admin.SearchById;
 import com.te.lms.dto.mentor.AttendanceMorning;
 import com.te.lms.dto.mentor.AttendanceNoon;
+import com.te.lms.dto.mentor.BatchAttendanceDto;
 import com.te.lms.dto.mentor.MentorChangePassword;
 import com.te.lms.entity.mentor.MockDetails;
 import com.te.lms.response.Response;
@@ -123,5 +124,23 @@ public class MentorController {
 			response.setMsg("Please enter the correct credentials!");
 			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 		}
+	}
+	
+	@GetMapping("/getAttendance")
+	public ResponseEntity<Response> getBatchAttendance(@RequestBody BatchAttendanceDto attendanceDto ){
+		List<BatchAttendanceDto> batchAttendances = mentorService.getBatchAttendance(attendanceDto);
+		Response response = new Response();
+		if (batchAttendances != null) {
+			response.setData(batchAttendances);
+			response.setIsError(false);
+			response.setMsg("List of attendances for batch");
+			return new ResponseEntity<>(response, HttpStatus.OK);
+		}else {
+			response.setData(null);
+			response.setIsError(true);
+			response.setMsg("Error!!!!!");
+			return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+		}
+		
 	}
 }

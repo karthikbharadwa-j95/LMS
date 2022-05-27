@@ -7,9 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.te.lms.dao.employee.EmployeeDao;
+import com.te.lms.dao.security.UserDao;
 import com.te.lms.dto.employee.DisplayPrimaryInfo;
 import com.te.lms.dto.employee.EmployeeChangePassword;
 import com.te.lms.entity.employee.EmployeePrimaryInfo;
+import com.te.lms.entity.security.User;
+import com.te.lms.enums.Status;
 import com.te.lms.exception.LmsException;
 
 @Service
@@ -21,6 +24,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 	@Autowired
 	private DisplayPrimaryInfo displayPrimaryInfo;
 
+	@Autowired
+	private UserDao userDao;
+
 	@Override
 	public EmployeePrimaryInfo addEmployee(EmployeePrimaryInfo employeePrimaryInfo) {
 
@@ -28,7 +34,10 @@ public class EmployeeServiceImpl implements EmployeeService {
 		if (info != null) {
 			throw new LmsException("Could not add the employee!");
 		} else {
-			return employeeDao.save(employeePrimaryInfo);
+			employeePrimaryInfo.setEmpStatus(Status.INACTIVE);
+			EmployeePrimaryInfo save = employeeDao.save(employeePrimaryInfo);
+			//System.out.println(save);
+			return save;
 		}
 	}
 
@@ -89,6 +98,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 			if (password.getNewPassword().equals(password.getConfirmPassword())) {
 				emp.setEmpPassword(password.getConfirmPassword());
 				employeeDao.save(emp);
+				User user = new User();
+				user.setUserPassword(emp.getEmpPassword());
+				userDao.save(user);
 			} else {
 				throw new LmsException("New Passwords does not match!");
 			}

@@ -16,4 +16,5 @@ public class MentorChangePassword {
 	private String currentPassword;
 	private String newPassword;
 	private String confirmPassword;
+	private String username;
 }

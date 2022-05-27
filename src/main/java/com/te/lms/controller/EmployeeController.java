@@ -26,7 +26,7 @@ public class EmployeeController {
 	private EmployeeService employeeService;
 
 	// to add the employee into the DB
-	@PostMapping("/employee")
+	@PostMapping("/register")
 	public ResponseEntity<Response> addEmp(@RequestBody EmployeePrimaryInfo empPrimaryInfo) {
 		Response response = new Response();
 		EmployeePrimaryInfo employee = employeeService.addEmployee(empPrimaryInfo);
@@ -43,7 +43,7 @@ public class EmployeeController {
 	}
 
 	// to delete the entire employee details in the DB
-	@DeleteMapping("/employee")
+	@DeleteMapping("/delete")
 	public ResponseEntity<Response> deleteAll() {
 		Response response = new Response();
 		employeeService.deleteAll();
@@ -53,7 +53,7 @@ public class EmployeeController {
 	}
 
 	// to update the employee
-	@PutMapping("/employee")
+	@PutMapping("/update")
 	public ResponseEntity<Response> updateEmp(@RequestBody EmployeePrimaryInfo empPrimaryInfo) {
 		Response response = new Response();
 		EmployeePrimaryInfo employee = employeeService.updateEmployee(empPrimaryInfo);
@@ -70,7 +70,7 @@ public class EmployeeController {
 	}
 
 	// to retrieve only the primary info without few fields
-	@GetMapping("/employee/{empId}")
+	@GetMapping("/search/{empId}")
 	public ResponseEntity<Response> displayPrimaryInfo(@PathVariable String empId) {
 		Response response = new Response();
 		DisplayPrimaryInfo displayPrimaryInfo = employeeService.searchById(empId);

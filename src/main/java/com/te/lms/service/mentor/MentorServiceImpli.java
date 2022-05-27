@@ -7,17 +7,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.te.lms.dao.mentor.MockDao;
+import com.te.lms.dao.security.UserDao;
+import com.te.lms.dao.admin.BatchDao;
 import com.te.lms.dao.admin.MentorDao;
 import com.te.lms.dao.employee.EmployeeDao;
 import com.te.lms.dao.mentor.AttendanceDao;
 import com.te.lms.dto.admin.SearchById;
 import com.te.lms.dto.mentor.AttendanceMorning;
 import com.te.lms.dto.mentor.AttendanceNoon;
+import com.te.lms.dto.mentor.BatchAttendanceDto;
 import com.te.lms.dto.mentor.MentorChangePassword;
 import com.te.lms.entity.admin.Mentor;
 import com.te.lms.entity.employee.EmployeePrimaryInfo;
 import com.te.lms.entity.mentor.EmployeeAttendance;
 import com.te.lms.entity.mentor.MockDetails;
+import com.te.lms.entity.security.User;
 import com.te.lms.exception.LmsException;
 
 @Service
@@ -34,12 +38,15 @@ public class MentorServiceImpli implements MentorService {
 
 	@Autowired
 	private MentorDao mentorDao;
-	
+
+	@Autowired
+	private BatchDao batchDao;
+
+	@Autowired
+	private UserDao userDao;
+
 	@Autowired
 	private AttendanceMorning attendanceMorning;
-
-	
-	
 
 	@Override
 	public MockDetails addMock(MockDetails details) {
@@ -97,6 +104,11 @@ public class MentorServiceImpli implements MentorService {
 			if (password.getNewPassword().equals(password.getConfirmPassword())) {
 				mentor.setPassword(password.getConfirmPassword());
 				mentorDao.save(mentor);
+		//	User user = new User();
+				User findByUserName = userDao.findByUserName(password.getUsername());
+				findByUserName.setUserPassword(password.getConfirmPassword());
+				//findByUserName.setUserId(findByUserName.getUserId());
+				userDao.save(findByUserName);
 			} else {
 				throw new LmsException("New Passwords does not match!");
 			}
@@ -127,7 +139,8 @@ public class MentorServiceImpli implements MentorService {
 	@Override
 	public Boolean updateAttendance(List<AttendanceNoon> noonAttendance) {
 		for (AttendanceNoon employeeAttendance1 : noonAttendance) {
-			List<EmployeeAttendance> addNoonAttendance = attendanceDao.findByAttendanceDate(employeeAttendance1.getAttendenceDate());
+			List<EmployeeAttendance> addNoonAttendance = attendanceDao
+					.findByAttendanceDate(employeeAttendance1.getAttendenceDate());
 			for (EmployeeAttendance attendance : addNoonAttendance) {
 				attendance.setAttendanceNoon(employeeAttendance1.getAttendanceNoon());
 				attendance.setAttendanceMorning(attendance.getAttendanceMorning());
@@ -136,7 +149,7 @@ public class MentorServiceImpli implements MentorService {
 				attendance.setAttendanceId(attendance.getAttendanceId());
 				attendanceDao.save(attendance);
 			}
-			
+
 		}
 //		List<EmployeeAttendance> att = new ArrayList<EmployeeAttendance>();
 //		att.add(attend);
@@ -148,6 +161,28 @@ public class MentorServiceImpli implements MentorService {
 //			attendanceDao.saveAll(att);
 //		}
 		return true;
+	}
+
+	@Override
+	public List<BatchAttendanceDto> getBatchAttendance(BatchAttendanceDto batchAttendanceDto) {
+		List<BatchAttendanceDto> attendanceDtos = new ArrayList<>();
+		List<EmployeePrimaryInfo> employeePrimaryInfos = employeeDao
+				.findByInBatch(batchDao.findByBatchId(batchAttendanceDto.getBatchId()));
+		for (EmployeePrimaryInfo employeePrimaryInfo : employeePrimaryInfos) {
+			List<EmployeeAttendance> attendances = attendanceDao
+					.findByAttendanceDate(batchAttendanceDto.getAttendanceDate());
+			BatchAttendanceDto attendanceDto = new BatchAttendanceDto();
+			if (attendances != null) {
+				for (EmployeeAttendance employeeAttendance : attendances) {
+					attendanceDto.setAttendanceMorning(employeeAttendance.getAttendanceMorning());
+					attendanceDto.setAttendanceNoon(employeeAttendance.getAttendanceNoon());
+				}
+			}
+			attendanceDto.setEmpName(employeePrimaryInfo.getEmpName());
+			attendanceDto.setEmpId(employeePrimaryInfo.getEmpId());
+			attendanceDtos.add(attendanceDto);
+		}
+		return attendanceDtos;
 	}
 
 }

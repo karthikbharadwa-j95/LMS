@@ -13,6 +13,7 @@ import com.te.lms.dao.admin.BatchDao;
 import com.te.lms.dao.admin.MentorDao;
 import com.te.lms.dao.admin.RequestListDao;
 import com.te.lms.dao.employee.EmployeeDao;
+import com.te.lms.dao.security.UserDao;
 import com.te.lms.dto.admin.ApprovalDto;
 import com.te.lms.dto.admin.BatchesDto;
 import com.te.lms.dto.admin.EmployeeInactiveDto;
@@ -22,6 +23,8 @@ import com.te.lms.entity.admin.Batch;
 import com.te.lms.entity.admin.EmployeeRegistrationRequestList;
 import com.te.lms.entity.admin.Mentor;
 import com.te.lms.entity.employee.EmployeePrimaryInfo;
+import com.te.lms.entity.security.User;
+import com.te.lms.enums.BatchStatus;
 import com.te.lms.enums.Status;
 import com.te.lms.exception.LmsException;
 import com.te.lms.generatepassword.GeneratePassword;
@@ -45,6 +48,9 @@ public class AdminServiceImpli implements AdminService {
 	@Autowired
 	private RequestListDao requestListDao;
 
+	@Autowired
+	private UserDao userDao;
+
 	@Override
 	public Mentor addMentor(Mentor mentorinfo) {
 
@@ -52,6 +58,11 @@ public class AdminServiceImpli implements AdminService {
 		String tempPassword = pwd.passwordGenerator(10);
 		mentorinfo.setPassword(tempPassword);
 		Mentor mentor1 = mentorDao.save(mentorinfo);
+		User user = new User();
+		user.setUserName(mentorinfo.getMentorName());
+		user.setUserPassword(tempPassword);
+		user.setUserRoles("ROLE_MENTOR");
+		userDao.save(user);
 		emailService.sendEmail(mentor1.getMentorEmail(), "Spring Test Password",
 				"new temporary Password: " + mentor1.getPassword());
 		return mentor1;
@@ -66,7 +77,8 @@ public class AdminServiceImpli implements AdminService {
 	public Boolean deleteMentor(String mentorId) {
 		Mentor mentor = mentorDao.findByMentorId(mentorId);
 		if (mentor != null) {
-			mentorDao.delete(mentor);
+			mentor.setMentorStatus(true);
+			mentorDao.save(mentor);
 			return true;
 		} else {
 			throw new LmsException("Mentor not found!");
@@ -87,7 +99,8 @@ public class AdminServiceImpli implements AdminService {
 	public Boolean deleteBatch(String batchId) {
 		Batch batch = batchDao.findByBatchId(batchId);
 		if (batch != null) {
-			batchDao.delete(batch);
+			batch.setBatchStatus(BatchStatus.TERMINATED);
+			batchDao.save(batch);
 			return true;
 		} else {
 			throw new LmsException("Batch not found!");
@@ -120,6 +133,11 @@ public class AdminServiceImpli implements AdminService {
 		if (findByBatchId != null) {
 			EmployeePrimaryInfo employeePrimaryInfo = employeeDao.findByEmpId(approval.getEmpId());
 			employeePrimaryInfo.setEmpPassword(passwordGenerator);
+			User user = new User();
+			user.setUserPassword(passwordGenerator);
+			user.setUserName(approval.getEmpName());
+			user.setUserRoles("ROLE_EMPLOYEE");
+			userDao.save(user);
 			EmployeeRegistrationRequestList requestList = new EmployeeRegistrationRequestList();
 			requestList.setBatchId(approval.getBatchId());
 			requestList.setBatchName(approval.getBatchName());
@@ -193,7 +211,7 @@ public class AdminServiceImpli implements AdminService {
 	public List<BatchesDto> allBatches() {
 		return batchDao.findAll().stream().map(this::convertBatchDto).collect(Collectors.toList());
 	}
-	
+
 	@Override
 	public SearchById searchById(String id) {
 		SearchById searchById = new SearchById();

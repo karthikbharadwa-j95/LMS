@@ -39,6 +39,9 @@ public class Mentor {
 	@Column(name="mentor_name")
 	private String mentorName;
 	
+	@Column(name = "mentor_status")
+	private Boolean mentorStatus;
+	
 	@Column(name="password")
 	@JsonProperty(access = Access.WRITE_ONLY)
 	private String password;
